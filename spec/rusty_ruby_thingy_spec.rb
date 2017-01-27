@@ -6,6 +6,6 @@ RSpec.describe RustyRubyThingy do
   end
 
   it "does something useful" do
-    expect(RustyRubyThingy.test_it_out).to eq "hello"
+    expect(RustyRubyThingy.test_it_out("http://charlieegan3.com")).to include("charlieegan3")
   end
 end
