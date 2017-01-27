@@ -3,10 +3,14 @@ require "rusty_ruby_thingy/version"
 require "fiddle"
 
 module RustyRubyThingy
-  def self.test_it_out(url)
+  def self.query(term)
     library = Fiddle::dlopen('target/release/libapp.so')
-    Fiddle::Function.new(library['initialize_thing'], [], Fiddle::TYPE_VOIDP).call
+    Fiddle::Function.new(
+      library['initialize_speller'],
+      [],
+      Fiddle::TYPE_VOIDP
+    ).call
 
-    Thing.new.say_hello(url)
+    Speller.new.query(term)
   end
 end
