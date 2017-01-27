@@ -1,16 +1,16 @@
 # coding: utf-8
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'rusty_ruby_thingy/version'
+require "search_spell/version"
 
 Gem::Specification.new do |spec|
-  spec.name          = "rusty_ruby_thingy"
-  spec.version       = RustyRubyThingy::VERSION
+  spec.name          = "search_spell"
+  spec.version       = SearchSpell::VERSION
   spec.authors       = ["Charlie Egan"]
   spec.email         = ["me@charlieegan3.com"]
 
-  spec.summary       = %q{playing with some rusty rubies}
-  spec.description   = %q{still playing}
+  spec.summary       = %q{Get search suggestions in parallel with from Ruby with Rust}
+  spec.description   = %q{Uses ruru to implement a Ruby speller class to collect results for typos from search engines.}
   spec.homepage      = "https://charlieegan3.com"
   spec.license       = "MIT"
 

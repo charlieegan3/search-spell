@@ -1,8 +1,8 @@
-require "rusty_ruby_thingy/version"
+require "search_spell/version"
 
 require "fiddle"
 
-module RustyRubyThingy
+module SearchSpell
   def self.query(term)
     library = Fiddle::dlopen('target/release/libapp.so')
     Fiddle::Function.new(
