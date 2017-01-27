@@ -6,6 +6,6 @@ RSpec.describe RustyRubyThingy do
   end
 
   it "does something useful" do
-    expect(RustyRubyThingy.query("misstake")).to eq ["mistake"]
+    expect(RustyRubyThingy.query("misstake")).to eq ["mistake", "mistake"]
   end
 end

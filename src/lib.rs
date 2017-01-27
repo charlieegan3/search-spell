@@ -22,14 +22,20 @@ methods!(
     itself,
 
     fn query(term: RString) -> Array {
-        let mut results = Array::with_capacity(1);
+        let mut results = Array::with_capacity(2);
 
         let string_term = match term {
             Ok(t) => { t.to_string() },
             _ => { return Array::new() }
         };
 
-        match get_google_suggestion(string_term) {
+        match get_google_suggestion(&string_term) {
+            Some(result) => {
+                results.push(RString::new(&result));
+            },
+            _ => {}
+        }
+        match get_ddg_suggestion(&string_term) {
             Some(result) => {
                 results.push(RString::new(&result));
             },
@@ -46,12 +52,28 @@ pub extern fn initialize_speller() {
     });
 }
 
-pub fn get_google_suggestion(term: String) -> Option<String> {
+pub fn get_google_suggestion(term: &String) -> Option<String> {
     let url = format!("https://www.google.com/search?q={}", term);
 
     let response = get_content(&url);
 
     let re = Regex::new(r"class=.spell. \S+><b><i>(?P<word>[^<]+)").unwrap();
+    match re.captures(&response) {
+        Some(caps) => {
+            return Some(String::from(&caps["word"]))
+        },
+        None => {
+            return None
+        }
+    }
+}
+
+pub fn get_ddg_suggestion(term: &String) -> Option<String> {
+    let url = format!("https://duckduckgo.com/html/?q={}", term);
+
+    let response = get_content(&url);
+
+    let re = Regex::new(r"Including results for <a[^>]+><b>(?P<word>[^<]+)").unwrap();
     match re.captures(&response) {
         Some(caps) => {
             return Some(String::from(&caps["word"]))
@@ -88,7 +110,13 @@ mod tests {
 
     #[test]
     fn google_example() {
-		let result = get_google_suggestion(String::from("mistakee"));
+		let result = get_google_suggestion(&String::from("mistakee"));
 		assert_eq!(result.unwrap(), String::from("mistake"));
+    }
+
+    #[test]
+    fn ddg_example() {
+		let result = get_ddg_suggestion(&String::from("errorr"));
+		assert_eq!(result.unwrap(), String::from("error"));
     }
 }
