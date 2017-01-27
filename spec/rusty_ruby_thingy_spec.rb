@@ -6,6 +6,6 @@ RSpec.describe RustyRubyThingy do
   end
 
   it "does something useful" do
-    expect(false).to eq(true)
+    expect(RustyRubyThingy.test_it_out).to eq "hello"
   end
 end

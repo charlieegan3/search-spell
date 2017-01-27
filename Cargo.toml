@@ -1,0 +1,10 @@
+[package]
+name = "app"
+version = "0.1.0"
+authors = ["charlie"]
+
+[dependencies]
+ruru = "0.9.0"
+
+[lib]
+crate-type = ["dylib"]

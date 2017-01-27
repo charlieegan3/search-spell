@@ -9,7 +9,4 @@ task :default => :test
 Thermite::Tasks.new
 
 desc 'Run Rust & Ruby testsuites'
-task test: ['thermite:build', 'thermite:test'] do
-  puts "run rspec"
-  puts "run cargo test"
-end
+task test: ['thermite:build', 'thermite:test', 'spec']
