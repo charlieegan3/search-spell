@@ -6,6 +6,7 @@ extern crate hyper_native_tls;
 
 use std::io::Read;
 use std::error::Error;
+use std::thread;
 
 use hyper::Client;
 use hyper::Url;
@@ -22,31 +23,12 @@ methods!(
     itself,
 
     fn query(term: RString) -> Array {
-        let mut results = Array::with_capacity(2);
-
         let string_term = match term {
             Ok(t) => { t.to_string() },
             _ => { return Array::new() }
         };
 
-        let google_url = format!("https://www.google.com/search?q={}", string_term);
-        let ddg_url    = format!("https://duckduckgo.com/html/?q={}", string_term);
-        let google_re  = Regex::new(r"class=.spell. \S+><b><i>(?P<word>[^<]+)").unwrap();
-        let ddg_re     = Regex::new(r"Including results for <a[^>]+><b>(?P<word>[^<]+)").unwrap();
-
-        match get_suggestion(&google_url, &google_re) {
-            Some(result) => {
-                results.push(RString::new(&result));
-            },
-            _ => {}
-        }
-        match get_suggestion(&ddg_url, &ddg_re) {
-            Some(result) => {
-                results.push(RString::new(&result));
-            },
-            _ => {}
-        }
-        return results;
+        return get_results(&string_term);
     }
 );
 
@@ -55,6 +37,39 @@ pub extern fn initialize_speller() {
     Class::new("Speller", None).define(|itself| {
         itself.def("query", query);
     });
+}
+
+pub fn get_results(string_term: &str) -> Array {
+    let mut results = Array::with_capacity(2);
+
+    let google_url = format!("https://www.google.com/search?q={}", string_term);
+    let ddg_url    = format!("https://duckduckgo.com/html/?q={}", string_term);
+    let google_re  = Regex::new(r"class=.spell. \S+><b><i>(?P<word>[^<]+)").unwrap();
+    let ddg_re     = Regex::new(r"Including results for <a[^>]+><b>(?P<word>[^<]+)").unwrap();
+
+    let google_task = thread::spawn(move || {
+        return get_suggestion(&google_url, &google_re);
+    });
+    let ddg_task    = thread::spawn(move || {
+        return get_suggestion(&ddg_url, &ddg_re);
+    });
+
+    let google_result = google_task.join().unwrap();
+    let ddg_result    = ddg_task.join().unwrap();
+
+    match google_result {
+        Some(result) => {
+            results.push(RString::new(&result));
+        },
+        _ => {}
+    }
+    match ddg_result {
+        Some(result) => {
+            results.push(RString::new(&result));
+        },
+        _ => {}
+    }
+    return results;
 }
 
 pub fn get_suggestion(url: &str, pattern: &Regex) -> Option<String> {
