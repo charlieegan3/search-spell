@@ -96,7 +96,12 @@ fn get_content(url: &str) -> String {
     match client.get(url.as_str()).header(ua).send() {
         Ok(mut response) => {
             let mut buffer = String::new();
-            response.read_to_string(&mut buffer);
+            match response.read_to_string(&mut buffer) {
+                Err(err) => {
+                    return String::from(err.description());
+                },
+                _ => {}
+            };
             return buffer;
         },
         Err(err) => {
