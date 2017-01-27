@@ -29,13 +29,18 @@ methods!(
             _ => { return Array::new() }
         };
 
-        match get_google_suggestion(&string_term) {
+        let google_url = format!("https://www.google.com/search?q={}", string_term);
+        let ddg_url    = format!("https://duckduckgo.com/html/?q={}", string_term);
+        let google_re  = Regex::new(r"class=.spell. \S+><b><i>(?P<word>[^<]+)").unwrap();
+        let ddg_re     = Regex::new(r"Including results for <a[^>]+><b>(?P<word>[^<]+)").unwrap();
+
+        match get_suggestion(&google_url, &google_re) {
             Some(result) => {
                 results.push(RString::new(&result));
             },
             _ => {}
         }
-        match get_ddg_suggestion(&string_term) {
+        match get_suggestion(&ddg_url, &ddg_re) {
             Some(result) => {
                 results.push(RString::new(&result));
             },
@@ -52,29 +57,10 @@ pub extern fn initialize_speller() {
     });
 }
 
-pub fn get_google_suggestion(term: &String) -> Option<String> {
-    let url = format!("https://www.google.com/search?q={}", term);
-
+pub fn get_suggestion(url: &str, pattern: &Regex) -> Option<String> {
     let response = get_content(&url);
 
-    let re = Regex::new(r"class=.spell. \S+><b><i>(?P<word>[^<]+)").unwrap();
-    match re.captures(&response) {
-        Some(caps) => {
-            return Some(String::from(&caps["word"]))
-        },
-        None => {
-            return None
-        }
-    }
-}
-
-pub fn get_ddg_suggestion(term: &String) -> Option<String> {
-    let url = format!("https://duckduckgo.com/html/?q={}", term);
-
-    let response = get_content(&url);
-
-    let re = Regex::new(r"Including results for <a[^>]+><b>(?P<word>[^<]+)").unwrap();
-    match re.captures(&response) {
+    match pattern.captures(&response) {
         Some(caps) => {
             return Some(String::from(&caps["word"]))
         },
@@ -106,17 +92,23 @@ fn get_content(url: &str) -> String {
 
 #[cfg(test)]
 mod tests {
+    use regex::Regex;
     use super::*;
 
     #[test]
     fn google_example() {
-		let result = get_google_suggestion(&String::from("mistakee"));
+        let google_url = format!("https://www.google.com/search?q={}", "mistakke");
+        let google_re  = Regex::new(r"class=.spell. \S+><b><i>(?P<word>[^<]+)").unwrap();
+
+		let result = get_suggestion(&google_url, &google_re);
 		assert_eq!(result.unwrap(), String::from("mistake"));
     }
 
     #[test]
     fn ddg_example() {
-		let result = get_ddg_suggestion(&String::from("errorr"));
+        let ddg_url    = format!("https://duckduckgo.com/html/?q={}", "errorr");
+        let ddg_re     = Regex::new(r"Including results for <a[^>]+><b>(?P<word>[^<]+)").unwrap();
+		let result = get_suggestion(&ddg_url, &ddg_re);
 		assert_eq!(result.unwrap(), String::from("error"));
     }
 }
